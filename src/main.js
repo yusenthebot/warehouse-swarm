@@ -6,7 +6,16 @@ import { draw } from './render.js';
 const CELL = 26;
 const TICK_MS = 90;                 // base sim tick interval at 1x speed
 
-const sim = new Sim({ width: 30, height: 20, robots: 12, seed: 7, orderRate: 0.9 });
+// Optional URL params let you launch a specific configuration directly,
+// e.g. ?robots=20&rate=1.6&speed=4 — handy for demos and screenshots.
+const params = new URLSearchParams(location.search);
+const clamp = (k, d, lo, hi) => Math.max(lo, Math.min(hi, Number(params.get(k)) || d));
+const sim = new Sim({
+  width: 30, height: 20,
+  robots: clamp('robots', 12, 1, 60),
+  seed: clamp('seed', 7, 1, 1e9),
+  orderRate: Number(params.get('rate')) || 0.9,
+});
 window.__sim = sim;
 
 const canvas = document.getElementById('view');
@@ -14,7 +23,7 @@ canvas.width = sim.grid.width * CELL;
 canvas.height = sim.grid.height * CELL;
 const ctx = canvas.getContext('2d');
 
-let speed = 2;
+let speed = clamp('speed', 2, 1, 8);
 let acc = 0;
 let last = performance.now();
 const startWall = last;
@@ -48,4 +57,6 @@ requestAnimationFrame(frame);
 document.getElementById('add1').onclick = () => sim.addRobot();
 document.getElementById('add5').onclick = () => { for (let i = 0; i < 5; i++) sim.addRobot(); };
 const sp = document.getElementById('speed');
+sp.value = speed;
+document.getElementById('speed-val').textContent = speed + 'x';
 sp.oninput = () => { speed = Number(sp.value); document.getElementById('speed-val').textContent = speed + 'x'; };
