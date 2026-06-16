@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Warehouse Swarm</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; background: #020617; color: #e2e8f0;
+           font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .wrap { display: flex; gap: 18px; padding: 18px; align-items: flex-start; flex-wrap: wrap; }
+    canvas { background: #020617; border: 1px solid #1e293b; border-radius: 6px; }
+    .panel { min-width: 220px; }
+    h1 { font-size: 16px; margin: 0 0 4px; letter-spacing: 0.3px; }
+    .sub { color: #64748b; margin: 0 0 14px; }
+    .metrics { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; margin-bottom: 16px; }
+    .metrics .v { color: #38bdf8; text-align: right; font-variant-numeric: tabular-nums; }
+    .metrics .v.zero { color: #34d399; }
+    button { background: #1e293b; color: #e2e8f0; border: 1px solid #334155;
+             border-radius: 5px; padding: 6px 10px; cursor: pointer; margin: 0 6px 6px 0; }
+    button:hover { background: #334155; }
+    label { display: block; margin: 10px 0 4px; color: #94a3b8; }
+    .legend { margin-top: 16px; color: #64748b; font-size: 12px; }
+    .legend span { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="view"></canvas>
+    <div class="panel">
+      <h1>Warehouse Swarm</h1>
+      <p class="sub">autonomous fulfillment sim</p>
+      <div class="metrics">
+        <div>orders done</div><div class="v" id="m-done">0</div>
+        <div>queued</div><div class="v" id="m-queued">0</div>
+        <div>robots</div><div class="v" id="m-robots">0</div>
+        <div>collisions</div><div class="v zero" id="m-collisions">0</div>
+        <div>utilization</div><div class="v" id="m-util">0%</div>
+        <div>throughput</div><div class="v" id="m-tput">0/s</div>
+        <div>tick</div><div class="v" id="m-tick">0</div>
+      </div>
+      <button id="add1">+1 robot</button>
+      <button id="add5">+5 robots</button>
+      <label>speed: <span id="speed-val">2x</span></label>
+      <input type="range" id="speed" min="1" max="8" value="2" step="1" style="width:100%" />
+      <div class="legend">
+        <div><span style="background:#475569"></span>shelf
+             <span style="background:#065f46"></span>charger
+             <span style="background:#7c2d12"></span>dropoff</div>
+        <div style="margin-top:4px">yellow square = carrying a load</div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

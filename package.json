@@ -1,0 +1,13 @@
+{
+  "name": "warehouse-swarm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Autonomous warehouse robot swarm simulator — fulfillment with pathfinding, dispatch, collision-free movement, live dashboard.",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "headless": "node tools/run-headless.mjs",
+    "serve": "python3 -m http.server 8000",
+    "shot": "bash tools/shot.sh"
+  }
+}
