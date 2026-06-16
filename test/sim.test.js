@@ -71,3 +71,17 @@ test('order generator honours maxOrders', () => {
   for (let i = 0; i < 4000; i++) sim.step();
   assert.equal(sim.metrics.ordersCreated, 25, 'never creates more than the cap');
 });
+
+test('scenario is robust across seeds (no stall / collision / strand)', () => {
+  for (let s = 1; s <= 6; s++) {
+    const sim = new Sim({ robots: 16, seed: s, orderRate: 5, maxOrders: 200 });
+    let makespan = -1;
+    for (let t = 0; t < 100000 && makespan < 0; t++) {
+      sim.step();
+      if (sim.metrics.ordersDone >= 200) makespan = sim.tick;
+    }
+    assert.equal(sim.metrics.ordersDone, 200, `seed ${s}: all 200 delivered`);
+    assert.equal(sim.stats().collisions, 0, `seed ${s}: zero collisions`);
+    assert.ok(sim.stats().minBattery > 0, `seed ${s}: no robot stranded`);
+  }
+});

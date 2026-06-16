@@ -9,7 +9,11 @@
     body { margin: 0; background: #020617; color: #e2e8f0;
            font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
     .wrap { display: flex; gap: 18px; padding: 18px; align-items: flex-start; flex-wrap: wrap; }
-    canvas { background: #020617; border: 1px solid #1e293b; border-radius: 6px; }
+    canvas { background: #020617; border: 1px solid #1e293b; border-radius: 6px; display: block; }
+    .stage { position: relative; }
+    #banner { display: none; position: absolute; left: 50%; top: 16px; transform: translateX(-50%);
+              background: #065f46; color: #d1fae5; border: 1px solid #34d399; border-radius: 6px;
+              padding: 9px 18px; font-weight: bold; white-space: nowrap; box-shadow: 0 6px 24px #000a; }
     .panel { min-width: 220px; }
     h1 { font-size: 16px; margin: 0 0 4px; letter-spacing: 0.3px; }
     .sub { color: #64748b; margin: 0 0 14px; }
@@ -26,7 +30,10 @@
 </head>
 <body>
   <div class="wrap">
-    <canvas id="view"></canvas>
+    <div class="stage">
+      <canvas id="view"></canvas>
+      <div id="banner"></div>
+    </div>
     <div class="panel">
       <h1>Warehouse Swarm</h1>
       <p class="sub">autonomous fulfillment sim</p>

@@ -10,13 +10,28 @@ const TICK_MS = 90;                 // base sim tick interval at 1x speed
 const params = new URLSearchParams(location.search);
 const clamp = (k, d, lo, hi) => Math.max(lo, Math.min(hi, Number(params.get(k)) || d));
 
+// ?orders=N runs a fixed-batch scenario: inject exactly N, then freeze on a DONE banner.
+const ORDERS = clamp('orders', 0, 0, 100000);
 const sim = new Sim({
   width: 30, height: 20,
   robots: clamp('robots', 12, 1, 60),
   seed: clamp('seed', 7, 1, 1e9),
-  orderRate: Number(params.get('rate')) || 0.9,
+  orderRate: Number(params.get('rate')) || (ORDERS ? 5 : 0.9),
+  maxOrders: ORDERS || Infinity,
 });
 window.__sim = sim;
+
+let scenarioDone = false, makespanTicks = 0;
+function checkDone() {
+  if (ORDERS && !scenarioDone && sim.metrics.ordersDone >= ORDERS) {
+    scenarioDone = true;
+    makespanTicks = sim.tick;
+    const b = document.getElementById('banner');
+    b.textContent = `✓ ${ORDERS} orders delivered in ${makespanTicks} ticks · ${sim.stats().collisions} collisions`;
+    b.style.display = 'block';
+  }
+  return scenarioDone;
+}
 
 const canvas = document.getElementById('view');
 canvas.width = sim.grid.width * CELL;
@@ -69,6 +84,7 @@ let warmPrevDone = 0;
 for (let i = 0; i < WARM; i++) {
   sim.step();
   if ((i + 1) % SAMPLE === 0) { pushSpark(sim.metrics.ordersDone - warmPrevDone); warmPrevDone = sim.metrics.ordersDone; }
+  if (checkDone()) break;
 }
 
 // live sampling on wall-clock windows
@@ -83,9 +99,13 @@ function sampleThroughput(now) {
 function frame(now) {
   acc += now - last;
   last = now;
-  const interval = TICK_MS / speed;
-  let guard = 0;
-  while (acc >= interval && guard++ < 240) { sim.step(); acc -= interval; }
+  if (!scenarioDone) {
+    const interval = TICK_MS / speed;
+    let guard = 0;
+    while (acc >= interval && guard++ < 240) { sim.step(); if (checkDone()) break; acc -= interval; }
+  } else {
+    acc = 0;
+  }
   draw(ctx, sim, CELL);
   hud();
   sampleThroughput(now);
