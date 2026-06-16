@@ -23,8 +23,7 @@ live dashboard shows throughput / utilization / collisions; add robots online an
 - After a scenario completes the view freezes (by design); online-add adaptation is shown in endless mode (default).
 
 ### Status / next
-- **GOAL reached and real-verified → loop stopping.** Code committed locally (rounds 1–3).
-- **PENDING CEO GATE**: rounds 2–3 are local only; pushing to the public GitHub repo (`yusenthebot/warehouse-swarm`) + refreshed hero screenshot awaits Yusen's OK.
+- **GOAL reached and real-verified → loop stopped.** All 3 rounds pushed to public GitHub (`yusenthebot/warehouse-swarm`, de12b1b) with refreshed hero screenshot.
 - Optional future polish (not required by the GOAL): one-way traffic lanes, SKU/inventory model, demand-aware idle parking.
 
 ## How to verify (REAL-VERIFY)
