@@ -42,3 +42,32 @@ test('online-added robots also deliver', () => {
   for (let i = 0; i < 1500; i++) sim.step();
   assert.ok(sim.stats().ordersDone > before, 'throughput continues after scaling up');
 });
+
+test('robots never run flat (charging keeps the fleet alive)', () => {
+  const sim = new Sim({ robots: 14, seed: 3, orderRate: 1.2 });
+  let everCharged = false;
+  for (let i = 0; i < 12000; i++) {
+    sim.step();
+    for (const r of sim.robots) assert.ok(r.battery > 0, `robot ${r.id} still has charge at tick ${i}`);
+    if (sim.stats().charging > 0) everCharged = true;
+  }
+  assert.ok(everCharged, 'at least one robot recharged during a long run');
+});
+
+test('scenario: a fixed batch of orders all get delivered, collision-free', () => {
+  const sim = new Sim({ robots: 8, seed: 7, orderRate: 5, maxOrders: 60 });
+  let makespan = -1;
+  for (let t = 0; t < 100000 && makespan < 0; t++) {
+    sim.step();
+    if (sim.metrics.ordersDone >= 60) makespan = sim.tick;
+  }
+  assert.equal(sim.metrics.ordersDone, 60, 'all 60 delivered');
+  assert.equal(sim.stats().collisions, 0, 'zero collisions');
+  assert.ok(makespan > 0, 'completed within the cap');
+});
+
+test('order generator honours maxOrders', () => {
+  const sim = new Sim({ robots: 6, seed: 2, orderRate: 5, maxOrders: 25 });
+  for (let i = 0; i < 4000; i++) sim.step();
+  assert.equal(sim.metrics.ordersCreated, 25, 'never creates more than the cap');
+});

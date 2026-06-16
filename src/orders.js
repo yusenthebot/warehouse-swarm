@@ -13,10 +13,12 @@ export class Order {
 }
 
 export class OrderGenerator {
-  constructor(grid, rng, ratePerTick = 0.8) {
+  constructor(grid, rng, ratePerTick = 0.8, maxOrders = Infinity) {
     this.grid = grid;
     this.rng = rng;
     this.ratePerTick = ratePerTick; // expected new orders per tick
+    this.maxOrders = maxOrders;     // stop emitting after this many (scenario mode)
+    this.emitted = 0;
     this.nextId = 1;
   }
 
@@ -25,9 +27,10 @@ export class OrderGenerator {
     const out = [];
     let budget = this.ratePerTick;
     while (budget > 0) {
+      if (this.emitted >= this.maxOrders) break;
       if (this.rng() < Math.min(budget, 1)) {
         const o = this.makeOrder(tick);
-        if (o) out.push(o);
+        if (o) { out.push(o); this.emitted++; }
       }
       budget -= 1;
     }

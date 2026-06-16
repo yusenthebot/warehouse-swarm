@@ -1,35 +1,34 @@
 # progress — warehouse-swarm
 
 GOAL (acceptance): launch the sim, watch 20 robots fulfill 500 orders with **zero collisions**;
-live dashboard shows throughput / utilization / collisions; add robots online and see it adapt.
+live dashboard shows throughput / utilization / collisions; add robots online and see it adapt; robots recharge.
 
-## State: round 1 done — runnable, verified baseline
+## State: round 2 done — GOAL acceptance passes on data; battery + charging + scenario harness + sparkline
 
 ### Works (verified)
-- Grid warehouse (shelves / chargers / dropoffs), BFS pathfinding around static obstacles.
-- Order generation, nearest-idle-robot dispatch, pickup → dropoff fulfillment.
-- **Collision-free movement** (fixed-point claim resolver) + **deadlock breaker** (stuck → yield aside + reroute, staggered by id). Idle robots return home to clear lanes.
-- Live canvas render + HUD (orders done, queued, robots, collisions, utilization, throughput, tick), `+1/+5 robot` and speed controls.
-- URL config params (`?robots=N&rate=&speed=&seed=`) to launch a specific scenario directly.
-- Published: public GitHub repo `yusenthebot/warehouse-swarm` (README + hero screenshot). Loop commits locally; push at milestones.
-- 13 node:test unit tests green. Headless data run: **20 robots / 8000 ticks → 1846 delivered, 0 collisions, max stall 4 ticks**. 12 robots / 3000 ticks → 610 delivered, 0 collisions.
-- REAL-VERIFY: `tools/shot.sh` screenshot read back — robots routing, carrying loads, delivering; HUD live. See git.
+- Grid warehouse + BFS pathfinding; order generation; nearest-idle-robot dispatch; pickup → dropoff fulfillment.
+- **Collision-free movement** (fixed-point claim resolver) + **deadlock breaker**: generic stuck→yield AND decisive head-on-swap resolution (lower id wins, other yields at once — kills the livelock that stalled round 1's corner cases).
+- **Battery + charging**: drains per move; below 0.45 a robot reserves a free charger, routes, docks, recharges (0.04/tick), never strands; staggered initial charge desyncs waves. Dispatch skips low/charging robots.
+- **Scenario harness** `tools/scenario.mjs` — injects exactly N orders, runs to completion, reports makespan + asserts delivered==N, collisions==0, minBattery>0.
+- Live dashboard: orders/queued/robots/collisions/**charging**/utilization/throughput/tick + **throughput sparkline**; robot **battery bars** + green **charging rings**; `+1/+5 robot`, speed, and `?robots=&rate=&speed=&seed=&warm=` URL params.
+- 16 unit tests green.
+
+### Verified acceptance (data + eyes)
+- **GOAL scenario `node tools/scenario.mjs 500 20 7` → delivered 500, collisions 0, makespan 1228, minBattery 0.49, PASS.**
+- 60 orders / 8 robots → delivered 60, 0 collisions, makespan 296.
+- Screenshot read back: busy 20-robot swarm, battery bars, sparkline, 0 collisions (`.shot/round2.png`).
 
 ### Does NOT work yet / known gaps
-- **No battery/charging behaviour** — `robot.battery` field exists but unused; chargers are just parking spots.
-- Deadlock breaker is a **heuristic** (yield), not principled lifelong-MAPF; very high density could still thrash. No one-way lanes / traffic rules.
-- `orderRate 1.4` floods the queue (backlog grows) — capacity is proven but there's **no "scenario" mode** that injects exactly 500 orders and reports makespan + final collisions as the literal acceptance.
-- Dashboard shows instantaneous throughput only — **no throughput-over-time chart**.
-- Idle-return-home is naive (always to spawn charger), not demand-aware.
-- No regression test asserting the deadlock breaker keeps `longestStall` bounded.
+- **No in-browser scenario completion**: the live sim streams orders (queue grows under high rate); the 500-order "complete then show DONE in N ticks" is only headless. GOAL says "watch 20 robots complete 500 orders" → wants an in-browser `?orders=500` mode with a completion banner + progress bar.
+- Deadlock handling is robust on tested seeds but still heuristic (no formal lifelong-MAPF guarantee); a Review round should adversarially try to break it across many seeds.
+- Charging is intermittent; screenshot didn't catch a docked robot (green ring) — verify visually in a Review round.
+- README hero screenshot still shows round-1 look (no battery/sparkline).
 
-### Next-round seed (round 2)
-1. **Scenario acceptance harness**: `node tools/run-headless.mjs --orders 500 --robots 20` injects exactly 500 orders, runs to completion, prints `{delivered:500, collisions:0, makespanTicks}`. Make this THE acceptance check + a unit test.
-2. **Battery + charging**: battery drains per move; below threshold the robot reserves a free charger, routes there, recharges; never strands mid-aisle. Show battery in render + a "charging" count in HUD.
-3. **Throughput-over-time sparkline** in the dashboard.
-Then a Review round (adversarial: try to force a collision / deadlock / stranded robot in the real sim + screenshot).
+### Next-round seed (round 3 — build + Review)
+1. **In-browser scenario mode** `?orders=N`: inject exactly N, show progress N/total + a "DONE in T ticks, 0 collisions" banner. Screenshot it completing 500.
+2. **Review round**: adversarial verification across many seeds (`scenario.mjs` over seeds 1..50, assert all pass) to try to force a collision/deadlock/strand; de-sloppify; refresh README hero screenshot + docs; then offer GitHub push (CEO gate).
 
 ## How to verify (REAL-VERIFY, the only acceptance that counts)
 - `npm test` — unit (necessary, not sufficient).
-- `node tools/run-headless.mjs 20 8000 1.4 7` — data truth (delivered, collisions, stall).
-- `bash tools/shot.sh .shot/x.png` then **Read the PNG** — eyes on screen.
+- `node tools/scenario.mjs 500 20 7` — GOAL data acceptance (exit 0 = pass).
+- `bash tools/shot.sh .shot/x.png 8000 8150 'robots=20&rate=1.6&warm=900'` then **Read the PNG** — eyes on screen.

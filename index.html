@@ -35,9 +35,15 @@
         <div>queued</div><div class="v" id="m-queued">0</div>
         <div>robots</div><div class="v" id="m-robots">0</div>
         <div>collisions</div><div class="v zero" id="m-collisions">0</div>
+        <div>charging</div><div class="v" id="m-charging">0</div>
         <div>utilization</div><div class="v" id="m-util">0%</div>
         <div>throughput</div><div class="v" id="m-tput">0/s</div>
         <div>tick</div><div class="v" id="m-tick">0</div>
+      </div>
+      <div style="margin:-6px 0 14px">
+        <div style="color:#64748b;font-size:12px;margin-bottom:3px">throughput (orders/s)</div>
+        <canvas id="spark" width="220" height="40"
+                style="border:1px solid #1e293b;border-radius:4px;background:#0b1220;width:220px;height:40px"></canvas>
       </div>
       <button id="add1">+1 robot</button>
       <button id="add5">+5 robots</button>

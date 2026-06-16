@@ -1,8 +1,8 @@
 # STATUS — main
-updated: 2026-06-16T04:21 · loop 1
-goal:     20 robots fulfill 500 orders, zero collisions, live dashboard, online-scalable
+updated: 2026-06-16T04:48 · loop 2
+goal:     20 robots fulfill 500 orders, zero collisions, live dashboard, online-scalable, recharging
 phase:    green
 owns:     all (single session)
-doing:    round 1 done + published to GitHub (public, README + screenshot); URL config params added
+doing:    round 2 done — battery/charging + scenario harness + sparkline; GOAL scenario passes (500/20, 0 coll, minBatt 0.49)
 blocked:  none
-next:     round 2 — 500-order scenario harness (acceptance) + battery/charging + throughput chart
+next:     round 3 — in-browser ?orders=500 completion mode + Review round (adversarial multi-seed, de-sloppify, refresh README hero, offer GitHub push)

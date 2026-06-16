@@ -1,15 +1,15 @@
-// Browser entry: wire the Sim to a canvas + HUD, run a fixed-timestep loop,
-// and expose controls (add robots, speed). window.__sim is exposed for headless checks.
+// Browser entry: wire the Sim to a canvas + HUD, run a fixed-timestep loop, expose
+// controls. URL params (?robots=&rate=&speed=&seed=&warm=) launch a specific scenario.
+// window.__sim is exposed for headless checks.
 import { Sim } from './sim.js';
 import { draw } from './render.js';
 
 const CELL = 26;
 const TICK_MS = 90;                 // base sim tick interval at 1x speed
 
-// Optional URL params let you launch a specific configuration directly,
-// e.g. ?robots=20&rate=1.6&speed=4 — handy for demos and screenshots.
 const params = new URLSearchParams(location.search);
 const clamp = (k, d, lo, hi) => Math.max(lo, Math.min(hi, Number(params.get(k)) || d));
+
 const sim = new Sim({
   width: 30, height: 20,
   robots: clamp('robots', 12, 1, 60),
@@ -28,17 +28,56 @@ let acc = 0;
 let last = performance.now();
 const startWall = last;
 
+// --- throughput sparkline ---
+const spark = document.getElementById('spark');
+const sctx = spark.getContext('2d');
+const hist = [];
+function pushSpark(v) { hist.push(v); if (hist.length > 60) hist.shift(); }
+function drawSpark() {
+  const w = spark.width, h = spark.height, max = Math.max(0.001, ...hist);
+  sctx.clearRect(0, 0, w, h);
+  if (hist.length < 2) return;
+  sctx.strokeStyle = '#38bdf8';
+  sctx.lineWidth = 1.5;
+  sctx.beginPath();
+  hist.forEach((v, i) => {
+    const x = (i / (hist.length - 1)) * w;
+    const y = h - (v / max) * (h - 4) - 2;
+    i ? sctx.lineTo(x, y) : sctx.moveTo(x, y);
+  });
+  sctx.stroke();
+}
+
 function hud() {
   const s = sim.stats();
   const secs = Math.max(1, (performance.now() - startWall) / 1000);
-  const tput = (s.ordersDone / secs).toFixed(2);
   document.getElementById('m-done').textContent = s.ordersDone;
   document.getElementById('m-queued').textContent = s.queued;
   document.getElementById('m-robots').textContent = s.robots;
   document.getElementById('m-collisions').textContent = s.collisions;
+  document.getElementById('m-charging').textContent = s.charging;
   document.getElementById('m-util').textContent = (s.utilization * 100).toFixed(0) + '%';
-  document.getElementById('m-tput').textContent = tput + '/s';
+  document.getElementById('m-tput').textContent = (s.ordersDone / secs).toFixed(2) + '/s';
   document.getElementById('m-tick').textContent = s.tick;
+}
+
+// Warm-start: advance the sim before first paint so headless screenshots and demos
+// open on a busy warehouse, seeding the sparkline from the warm run. Deterministic.
+const WARM = clamp('warm', 0, 0, 50000);
+const SAMPLE = 40;
+let warmPrevDone = 0;
+for (let i = 0; i < WARM; i++) {
+  sim.step();
+  if ((i + 1) % SAMPLE === 0) { pushSpark(sim.metrics.ordersDone - warmPrevDone); warmPrevDone = sim.metrics.ordersDone; }
+}
+
+// live sampling on wall-clock windows
+let lastSampleT = startWall, lastSampleDone = sim.metrics.ordersDone;
+function sampleThroughput(now) {
+  if (now - lastSampleT < 400) return;
+  pushSpark(sim.metrics.ordersDone - lastSampleDone);
+  lastSampleT = now;
+  lastSampleDone = sim.metrics.ordersDone;
 }
 
 function frame(now) {
@@ -46,9 +85,11 @@ function frame(now) {
   last = now;
   const interval = TICK_MS / speed;
   let guard = 0;
-  while (acc >= interval && guard++ < 20) { sim.step(); acc -= interval; }
+  while (acc >= interval && guard++ < 240) { sim.step(); acc -= interval; }
   draw(ctx, sim, CELL);
   hud();
+  sampleThroughput(now);
+  drawSpark();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
