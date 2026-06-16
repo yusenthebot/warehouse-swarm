@@ -10,6 +10,8 @@ live dashboard shows throughput / utilization / collisions; add robots online an
 - Order generation, nearest-idle-robot dispatch, pickup → dropoff fulfillment.
 - **Collision-free movement** (fixed-point claim resolver) + **deadlock breaker** (stuck → yield aside + reroute, staggered by id). Idle robots return home to clear lanes.
 - Live canvas render + HUD (orders done, queued, robots, collisions, utilization, throughput, tick), `+1/+5 robot` and speed controls.
+- URL config params (`?robots=N&rate=&speed=&seed=`) to launch a specific scenario directly.
+- Published: public GitHub repo `yusenthebot/warehouse-swarm` (README + hero screenshot). Loop commits locally; push at milestones.
 - 13 node:test unit tests green. Headless data run: **20 robots / 8000 ticks → 1846 delivered, 0 collisions, max stall 4 ticks**. 12 robots / 3000 ticks → 610 delivered, 0 collisions.
 - REAL-VERIFY: `tools/shot.sh` screenshot read back — robots routing, carrying loads, delivering; HUD live. See git.
 
